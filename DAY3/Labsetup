@@ -1,0 +1,64 @@
+
+Step 1:  Download java 
+https://www.oracle.com/in/java/technologies/javase/javase8-archive-downloads.html#license-lightbox
+
+install update env variable 
+JAVA_HOME 
+|
+path - edit
+|
+%JAVA_HOME%\bin
+
+
+Step 2: Download Apache Spark
+https://www.apache.org/dyn/closer.lua/spark/spark-4.0.0/spark-4.0.0-bin-hadoop3.tgz
+
+-----------------------------------------------------------------------------------------------
+C: 
+ |__ mkdir hadoop
+      |
+     cd hadoop
+         |
+         mkdir bin
+         cd  bin
+	  copy winutils.exe here  [ C:\hadoop\bin ]
+-----------------------------------------------------------------
+C:
+|->new folder name called java 
+
+-----------------------------------------------------------------
+C:
+|-->spark (new folder name called spark)
+|
+|->spark
+      |- 
+
+Environment Variables
+|
+JAVA_HOME
+C:\java\
+
+HADOOP_HOME
+C:\hadoop
+
+SPARK_HOME
+C:\spark
+
+edit - path variable - at the end
+
+%JAVA_HOME%\bin
+%HADOOP_HOME%\bin
+%SPARK_HOME%\bin
+
+(OK)
+ |
+open new command prompt
+
+java -version
+
+
+pip install pyspark
+
+pyspark -version
+
+==============================================================================================
