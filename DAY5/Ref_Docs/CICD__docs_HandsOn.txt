@@ -1,0 +1,543 @@
+Step 0: Navigate to your project folder
+cd "C:\Users\karth\Karthik\Oct-DATA\DAY-5-Docs\CICD_Demo"
+
+Step 1: Initialize Git (if not already)
+git init
+
+✅ This creates a .git folder and makes your project a Git repository.
+
+Step 2: Add all files
+git add .
+
+Step 3: Commit your files
+git commit -m "Initial commit"
+
+Step 4: Rename branch to main (GitHub default)
+git branch -M main
+
+Step 5: Add the GitHub remote repository
+Important: Make sure the repo exists on GitHub first:
+https://github.com/Palanikarthikeyan/CICD_Demo
+
+If it doesn’t exist, create it as Public, don’t add README.
+git remote add origin https://github.com/Palanikarthikeyan/CICD_Demo.git
+
+
+Step 6: Push to GitHub
+git push -u origin main
+
+If Git asks for a username/password:
+
+Username: your GitHub username
+Password: your Personal Access Token (PAT) (GitHub no longer allows regular passwords)
+Create a PAT here: https://github.com/settings/tokens
+
+Step 7: Verify
+Go to GitHub → Your repository → You should see all your files.
+GitHub Actions will automatically trigger your CI/CD workflow if .github/workflows/ci-cd.yml exists.
+
+Tip: If you ever need to check your remote URL:
+git remote -v
+
+=======================================================================================================
+complete CI/CD pipeline for a Machine Learning project step-by-step.
+
+Project Overview
+Goal:
+Train a regression model → package it → deploy automatically via CI/CD.
+
+Tech Stack:
+==============
+Python (for model + API)
+scikit-learn
+MLflow (for model tracking)
+Flask (API)
+Docker (for containerization)
+GitHub Actions (for CI/CD automation)
+
+📁 Project Structure
+ml_ci_cd_project/
+│
+├── src/
+│   ├── train.py
+│   ├── predict_api.py
+│   └── requirements.txt
+│
+├── tests/
+│   └── test_train.py
+│
+├── Dockerfile
+│
+└── .github/
+    └── workflows/
+        └── ml-ci-cd.yml
+====================================================
+🧠 Step 1: Training Script (src/train.py)
+
+import mlflow
+import mlflow.sklearn
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
+import pandas as pd
+import numpy as np
+
+# Generate synthetic data
+X = np.random.rand(100, 1) * 10
+y = 3 * X + np.random.randn(100, 1) * 2
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Evaluate
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+
+# Log to MLflow
+mlflow.set_experiment("LinearRegressionDemo")
+with mlflow.start_run():
+    mlflow.log_param("model_type", "LinearRegression")
+    mlflow.log_metric("mse", mse)
+    mlflow.sklearn.log_model(model, "model")
+
+print(f"Model trained and logged to MLflow. MSE: {mse:.4f}")
+============================================================================================
+Step 2: Flask API (src/predict_api.py)
+from flask import Flask, request, jsonify
+import mlflow.sklearn
+import numpy as np
+
+app = Flask(__name__)
+
+# Load model from MLflow
+RUN_ID = "paste-your-latest-run-id-here"
+model = mlflow.sklearn.load_model(f"runs:/{RUN_ID}/model")
+
+@app.route('/')
+def home():
+    return "ML Model API is running!"
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    data = request.get_json()
+    features = np.array(data["features"]).reshape(1, -1)
+    prediction = model.predict(features)
+    return jsonify({"prediction": prediction.tolist()})
+
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=5000)
+==================================================================================================
+🧪 Step 3: Simple Test (tests/test_train.py)
+
+from src.train import model
+import numpy as np
+
+def test_model_prediction():
+    sample = np.array([[5.0]])
+    pred = model.predict(sample)
+    assert pred is not None
+==================================================================================================
+🧾 Step 4: Requirements (src/requirements.txt)
+flask
+mlflow
+scikit-learn
+pytest
+numpy
+pandas
+==================================================================================================
+🐳 Step 5: Dockerfile
+# Base image
+FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY src/requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY src/ /app
+
+EXPOSE 5000
+
+CMD ["python", "predict_api.py"]
+==================================================================================================
+⚙️ Step 6: GitHub Actions Workflow (.github/workflows/ml-ci-cd.yml)
+
+name: ML CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-train-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: pip install -r src/requirements.txt
+
+    - name: Run tests
+      run: pytest tests/
+
+    - name: Train model
+      run: python src/train.py
+
+    - name: Build Docker image
+      run: docker build -t ml-api:latest .
+
+    - name: Push Docker image
+      run: |
+        echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+        docker tag ml-api:latest ${{ secrets.DOCKER_HUB_USERNAME }}/ml-api:latest
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/ml-api:latest
+
+    - name: Deploy container (optional)
+      run: |
+        ssh user@your-server "
+          docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/ml-api:latest &&
+          docker run -d -p 80:5000 ${{ secrets.DOCKER_HUB_USERNAME }}/ml-api:latest
+        "
+=========================================================================================
+🔒 Step 7: GitHub Secrets Setup
+
+In your GitHub repository:
+
+Go to Settings → Secrets and Variables → Actions
+
+Add:
+
+DOCKER_HUB_USERNAME
+
+DOCKER_HUB_PASSWORD
+
+(Optional: for deployment)
+
+SERVER_IP
+
+SERVER_USER
+
+SERVER_SSH_KEY
+=========================================================================================
+🚀 Step 8: Trigger the Pipeline
+
+Commit all files to the main branch.
+
+The CI/CD pipeline runs automatically.
+
+It will:
+
+Run tests
+
+Train the model
+
+Build and push the Docker image
+
+Deploy to your server (if configured)
+
+✅ Final Result
+
+You’ll have:
+
+A trained ML model tracked in MLflow
+
+A Flask API containerized with Docker
+
+A GitHub Actions CI/CD pipeline automatically training and deploying your model whenever you push new code.
+=========================================================================================
+Task
+=====
+Create a **runnable local demo (with Docker + MLflow tracking)** you can test on your machine
+
+Let's create a runnable local ML CI/CD demo on Windows 11 using Docker + MLflow. 
+This will be a complete mini MLOps setup you can test locally before pushing to GitHub.
+
+We'll build a Linear Regression model, track it with MLflow, expose a Flask API, and 
+run everything in Docker.
+
+
+🧩 Step 0: Prerequisites
+
+Install Python 3.10+
+Install Docker Desktop and make sure it’s running
+Install Git
+Install VS Code (optional)
+docker --version
+
+📁 Step 1: Project Structure
+mlflow_demo/
+│
+├── src/
+│   ├── train.py
+│   ├── predict_api.py
+│   └── requirements.txt
+│
+├── mlruns/          # MLflow local tracking folder (auto-created)
+├── Dockerfile
+└── docker-compose.yml
+
+
+🧠 Step 2: Training Script (src/train.py)
+import mlflow
+import mlflow.sklearn
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
+import numpy as np
+
+# Create synthetic data
+X = np.random.rand(100, 1) * 10
+y = 3 * X + np.random.randn(100, 1) * 2
+
+# Train/test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Evaluate
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+
+# Log with MLflow
+mlflow.set_experiment("LocalLinearRegression")
+with mlflow.start_run():
+    mlflow.log_param("model_type", "LinearRegression")
+    mlflow.log_metric("mse", mse)
+    mlflow.sklearn.log_model(model, "model")
+
+print(f"Model trained and logged. MSE: {mse:.4f}")
+
+
+🌐 Step 3: Flask API (src/predict_api.py)
+from flask import Flask, request, jsonify
+import mlflow.sklearn
+import numpy as np
+
+app = Flask(__name__)
+
+# Load the latest MLflow model
+MODEL_PATH = "mlruns/0/<latest-run-id>/artifacts/model"  # replace <latest-run-id> after training
+model = mlflow.sklearn.load_model(MODEL_PATH)
+
+@app.route('/')
+def home():
+    return "MLflow + Flask API is running!"
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    data = request.get_json()
+    features = np.array(data["features"]).reshape(1, -1)
+    prediction = model.predict(features)
+    return jsonify({"prediction": prediction.tolist()})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+
+
+
+🧾 Step 4: Requirements (src/requirements.txt)
+flask
+mlflow
+scikit-learn
+numpy
+pandas
+
+
+🐳 Step 5: Dockerfile
+FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY src/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY src/ /app
+
+EXPOSE 5000 5001
+
+# Start MLflow server and Flask API
+CMD mlflow ui --host 0.0.0.0 --port 5001 & python predict_api.py
+
+
+🐙 Step 6: Docker Compose (docker-compose.yml)
+version: "3"
+services:
+  mlflow_demo:
+    build: .
+    ports:
+      - "5000:5000"   # Flask API
+      - "5001:5001"   # MLflow UI
+    volumes:
+      - ./mlruns:/app/mlruns
+
+
+🚀 Step 7: Run Locally with Docker
+Open PowerShell and navigate to project folder:
+cd path\to\mlflow_demo
+
+Build and run container:
+docker-compose up --build
+
+Access your services:
+
+Flask API: http://localhost:5000
+MLflow UI: http://localhost:5001
+
+🧪 Step 8: Test Flask API
+Use Postman or curl:
+curl -X POST http://localhost:5000/predict -H "Content-Type: application/json" -d "{\"features\": [5.0]}"
+
+✅ Step 9: What You Achieved
+
+ML model is trained locally
+
+Model is tracked in MLflow
+
+Flask API serves predictions
+
+Docker container runs both MLflow UI + API
+
+Fully portable — you can push to GitHub and later deploy with CI/CD
+================================================================================================
+
+Perfect! Let’s extend your local MLflow + Flask + Docker setup to a full CI/CD pipeline using GitHub Actions. This way, every time you push code, your model will:
+
+Be trained automatically
+
+Docker image rebuilt
+
+Optionally tested
+
+Ready for deployment
+
+
+🧩 Step 1: GitHub Repo Setup
+
+Create a GitHub repository, e.g., MLflow_CI_CD_Demo
+
+Push your local project (the mlflow_demo folder) to GitHub:
+
+cd path\to\mlflow_demo
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin https://github.com/<your-username>/MLflow_CI_CD_Demo.git
+git push -u origin main
+
+
+🧠 Step 2: Create GitHub Actions Workflow
+Create a folder and file:
+
+mlflow_demo/.github/workflows/ci-cd.yml
+
+
+Paste the following:
+name: ML CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-train-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r src/requirements.txt
+
+    - name: Train model
+      run: python src/train.py
+
+    - name: Test Flask API locally
+      run: |
+        python src/predict_api.py &
+        sleep 5
+        curl http://127.0.0.1:5000
+
+    - name: Build Docker image
+      run: docker build -t mlflow_demo:latest .
+
+    - name: Optional: Push Docker image to Docker Hub
+      env:
+        DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+        DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+      run: |
+        echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin
+        docker tag mlflow_demo:latest $DOCKER_HUB_USERNAME/mlflow_demo:latest
+        docker push $DOCKER_HUB_USERNAME/mlflow_demo:latest
+
+
+
+
+🧾 Step 3: GitHub Secrets for Docker (Optional)
+
+If you want to push Docker images:
+
+Go to your repo → Settings → Secrets → Actions
+
+Add:
+
+DOCKER_HUB_USERNAME → your Docker Hub username
+
+DOCKER_HUB_PASSWORD → your Docker Hub password or access token
+
+🚀 Step 4: How It Works
+
+Whenever you push code to main branch:
+
+GitHub Actions:
+
+Checks out your code
+
+Installs Python dependencies
+
+Trains the ML model via train.py
+
+Tests the Flask API via a curl command
+
+Builds the Docker image
+
+(Optional) Pushes it to Docker Hub
+
+You now have an automatic CI/CD pipeline for your ML project!
+
+🧪 Step 5: Verify
+
+Go to your GitHub repo → Actions tab
+
+You’ll see the workflow running automatically on push
+
+Check logs for training output, API test, and Docker build
+
+✅ After this, your ML model project is fully automated:
+
+Code changes → Auto train → Docker rebuild → Ready for deployment
+
+You can now add deployment to EC2, Azure, or Kubernetes next
+
+
