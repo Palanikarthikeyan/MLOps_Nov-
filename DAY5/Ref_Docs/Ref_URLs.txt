@@ -1,0 +1,29 @@
+https://www.sprinkledata.com/blogs/understanding-etl-pipelines-a-comprehensive-guide
+-------------------------------------------------------------------------------------------
+https://towardsdatascience.com/hands-on-introduction-to-delta-lake-with-py-spark-b39460a4b1ae/
+https://github.com/jaumpedro214/posts
+-------------------------------------------------------------------------------------------
+https://medium.com/analytics-vidhya/demystifying-delta-lake-d15869fd3470
+-------------------------------------------------------------------------------------------
+https://docs.databricks.com/aws/en/delta
+-------------------------------------------------------------------------------------------
+https://www.youtube.com/watch?v=TaOxDCduyWQ
+-------------------------------------------------------------------------------------------
+https://aws.amazon.com/blogs/big-data/build-a-high-performance-transactional-data-lake-using-open-source-delta-lake-on-amazon-emr/
+-------------------------------------------------------------------------------------------
+Presto with Kubernetes and S3 — Deployment
+https://medium.com/swlh/presto-with-kubernetes-and-s3-deployment-4e262849244a
+-------------------------------------------------------------------------------------------
+https://medium.com/devreads/book-review-stream-processing-with-apache-flink-by-fabian-hueske-vasiliki-kalavri-fb74626ba3bc
+----------------------------------------------------------------------------------------------
+End to End MLOps - project
+https://www.youtube.com/watch?v=o6vbe5G7xNo
+----------------------------------------------------------------------------------------------
+EndToEndML: An Open-Source End-to-End Pipeline for Machine Learning Applications
+
+https://arxiv.org/html/2403.18203v1
+https://www.labellerr.com/blog/end-to-end-ml-pipeline/
+https://medium.com/@dataninsight/mlops-building-and-automating-end-to-end-machine-learning-systems-df81796bbede
+----------------------------------------------------------------------------------------------
+https://grafana.com/docs/grafana-cloud/machine-learning/
+----------------------------------------------------------------------------------------------
